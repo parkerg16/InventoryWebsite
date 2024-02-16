@@ -17,9 +17,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from inventory.views import workorder_pdf
+from django.shortcuts import redirect
+
+
+def redirect_to_admin(request):
+    return redirect('/admin/')
 
 urlpatterns = [
+    path('', redirect_to_admin, name='redirect-to-admin'),
     path('admin/', admin.site.urls),
     path('admin/inventory/workorder/workorder_pdf/<int:workorder_id>/', workorder_pdf, name='workorder_pdf'),
     path('inventory/', include('inventory.urls', namespace='inventory')),
 ]
+
