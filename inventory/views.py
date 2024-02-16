@@ -1,6 +1,6 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from fpdf import FPDF
-from .models import WorkOrder
+from .models import WorkOrder, Manufacturer, ItemType
 import os
 
 
@@ -41,3 +41,9 @@ def workorder_pdf(request, workorder_id):
 
 	# Return a message indicating the PDF was saved successfully
 	return HttpResponse(f"PDF saved to file: {file_path}")
+
+
+def get_manufacturers(request):
+    item_type_id = request.GET.get('item_type_id')
+    manufacturers = Manufacturer.objects.filter(manufacturer_item_types__id=item_type_id)
+    return JsonResponse(list(manufacturers.values('id', 'name')), safe=False)

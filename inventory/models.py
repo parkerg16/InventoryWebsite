@@ -152,7 +152,6 @@ class Item(models.Model):
 	manufacturer = models.ForeignKey(Manufacturer, on_delete=models.SET_NULL, null=True)
 	in_commission = models.BooleanField(default=True)
 	image = models.ImageField(upload_to='item_images/', blank=True, null=True)
-
 	def __str__(self):
 		return f"{self.mars_id} - {self.item_name} - Model: {self.model_number} - Serial: {self.serial_number}"
 
