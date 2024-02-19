@@ -27,6 +27,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['https://wallopsinventory.azurewebsites.net', '*']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://wallopsinventory.azurewebsites.net',
+]
+
 
 
 # Application definition
