@@ -1,6 +1,8 @@
 import os
 from django.contrib import admin
+from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from openpyxl import load_workbook
 from .models import CleanlinessLevel, Contaminant, Damage, Material, WorkOrder, Item, WorkOrderItem, BubblePointLog, \
@@ -8,26 +10,27 @@ from .models import CleanlinessLevel, Contaminant, Damage, Material, WorkOrder, 
     Customer
 
 
+@staff_member_required
 def download_work_order_report(request, work_order_id):
-    # Ensure the user has the appropriate permissions
-    if not request.user.is_staff:
-        return HttpResponse("Unauthorized", status=401)
+    # Ensure the work order exists and handle permissions
+    work_order = get_object_or_404(WorkOrder, pk=work_order_id)
 
-    try:
-        work_order = WorkOrder.objects.get(pk=work_order_id)
-        # Assume you have a function to handle the report generation
-        file_path = generate_work_order_excel_report(work_order)
+    # Assuming generate_work_order_excel_report is updated as previously described
+    file_path = generate_work_order_excel_report(work_order_id)
 
-        with open(file_path, 'rb') as excel:
-            response = HttpResponse(excel.read(),
-                                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = f'attachment; filename=work_order_{work_order_id}_report.xlsx'
-            return response
-    except WorkOrder.DoesNotExist:
-        return HttpResponse("Work Order Not Found", status=404)
+    with open(file_path, 'rb') as excel_file:
+        response = HttpResponse(excel_file.read(),
+                                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="work_order_{work_order_id}_report.xlsx"'
+        return response
+
+def generate_work_order_excel_report(work_order_id):
+    # Load the work order with related objects
+    work_order = WorkOrder.objects.filter(pk=work_order_id).select_related('status', 'location', 'customer').first()
+    # Fetch all related WorkOrderItems for this WorkOrder
+    work_order_items = WorkOrderItem.objects.filter(work_order=work_order).select_related('item')
 
 
-def generate_work_order_excel_report(work_order):
     template_path = 'staticfiles/report_template/work_order_template.xlsx'
     report_path = f'work_order_{work_order.pk}_report.xlsx'
 
@@ -78,6 +81,7 @@ class WorkOrderAdmin(admin.ModelAdmin):
     search_fields = ('description', 'comment')
     readonly_fields = ('work_order_id',)  # Make the work_order_id field read-only
     inlines = [WorkOrderItemInline, WorkOrderFittingInLine]
+    change_form_template = 'admin/inventory/workorder/change_form.html'
 
 
 

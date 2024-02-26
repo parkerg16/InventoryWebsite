@@ -1,11 +1,11 @@
-# inventory/urls.py
-
 from django.urls import path
-from . import views
+from .admin import download_work_order_report
 
-app_name = 'inventory'  # Define the namespace
+app_name = 'inventory'  # Defines the namespace for these URLs
 
 urlpatterns = [
-	# ... your other URL patterns ...
-	path('workorder_pdf/<int:workorder_id>/', views.workorder_pdf, name='workorder_pdf'),
+    # Define other app-specific URLs as needed
+
+    # URL pattern for downloading the work order report
+    path('workorder/<int:work_order_id>/download_report/', download_work_order_report, name='download_work_order_report'),
 ]
