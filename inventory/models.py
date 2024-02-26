@@ -120,6 +120,8 @@ class Fitting(models.Model):
 	material = models.ForeignKey(Material, on_delete=models.SET_NULL, null=True, blank=True)
 	alternate = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
 
+	def __str__(self):
+		return f"Lot: {self.lot_number} - {self.fitting_size} - {self.fitting_name}"
 
 class WorkOrderFitting(models.Model):
 	work_order_fitting_id = models.AutoField(primary_key=True)
@@ -128,7 +130,7 @@ class WorkOrderFitting(models.Model):
 	quantity = models.IntegerField(default=1)
 
 	def __str__(self):
-		return f"Work Order: {self.work_order}, Fitting: {self.work_order_fitting}"
+		return f"Work Order: {self.work_order}, Fitting: {self.quantity}"
 
 
 class LabLogFitting(models.Model):
@@ -138,6 +140,8 @@ class LabLogFitting(models.Model):
 	quantity = models.IntegerField(default=1)
 
 
+# This item allows us to create a unique item without adding it to a work order so
+# We can keep track of the previous times the item was cleaned.
 class Item(models.Model):
 	mars_id = models.CharField(primary_key=True, max_length=6)
 	item_name = models.CharField(max_length=255)
@@ -155,7 +159,7 @@ class Item(models.Model):
 	def __str__(self):
 		return f"{self.mars_id} - {self.item_name} - Model: {self.model_number} - Serial: {self.serial_number}"
 
-
+# This allows us to add a unique instance of the item to a work order for history tracking
 class WorkOrderItem(models.Model):
 	work_order_item_id = models.AutoField(primary_key=True)
 	work_order = models.ForeignKey(WorkOrder, on_delete=models.SET_NULL, null=True)
