@@ -34,13 +34,23 @@ def generate_work_order_excel_report(work_order_id):
     template_path = 'staticfiles/report_template/work_order_template.xlsx'
     report_path = f'work_order_{work_order.pk}_report.xlsx'
 
+    address = work_order.customer.customer_address
+
     # Load the template
     wb = load_workbook(template_path)
     ws = wb.active  # Assuming you're working with the first sheet
 
-    # Here, you'd fill out the workbook with your work order's data
-    # For example:
-    ws['A1'] = f'Work Order ID: {work_order.pk}'
+    #Fill out customer here
+    ws['A2'] = f'{work_order.customer.customer_name}'
+    ws['A3'] = f'{work_order.customer.customer_address}'
+
+
+
+
+
+    # Fill out MARS ID Here
+    ws['AQ2'] = f'MARS -  {work_order.pk}'
+    ws['AS5'] = f'MARS -  {work_order.pk}'
     # Fill in more fields as needed based on your template and work order details
 
     # Save the filled report to a new file
