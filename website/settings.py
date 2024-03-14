@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-9si-slq$uf0@a6+$7d7&c@%j*%8u&4govord#_oe!v_e#@ix6_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['https://wallopsinventory.azurewebsites.net', '*']
+ALLOWED_HOSTS = ['wallopsinventory.azurewebsites.net']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://wallopsinventory.azurewebsites.net',
