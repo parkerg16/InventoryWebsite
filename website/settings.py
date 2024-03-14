@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-9si-slq$uf0@a6+$7d7&c@%j*%8u&4govord#_oe!v_e#@ix6_'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['https://wallopsinventory.azurewebsites.net', '*']
 
