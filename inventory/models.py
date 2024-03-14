@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 
 
 class CleanlinessLevel(models.Model):
@@ -89,7 +90,7 @@ class WorkOrder(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
-        return self.description
+        return f"{self.work_order_id}"
 
 
 class ItemType(models.Model):
@@ -130,7 +131,6 @@ class Fitting(models.Model):
     fitting_size = models.ForeignKey(FittingSize, on_delete=models.SET_NULL, null=True)
     manufacturer = models.ForeignKey(Manufacturer, on_delete=models.SET_NULL, null=True, blank=True)
     material = models.ForeignKey(Material, on_delete=models.SET_NULL, null=True, blank=True)
-    alternate = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f"Lot: {self.lot_number} - {self.fitting_size} - {self.fitting_name}"
@@ -146,11 +146,6 @@ class WorkOrderFitting(models.Model):
         return f"Work Order: {self.work_order}, Fitting: {self.quantity}"
 
 
-class LabLogFitting(models.Model):
-    lab_log_fitting_id = models.AutoField(primary_key=True)
-    lab_log = models.ForeignKey(WorkOrder, on_delete=models.SET_NULL, null=True)
-    lab_log_unique_fitting = models.ForeignKey(Fitting, on_delete=models.SET_NULL, null=True)
-    quantity = models.IntegerField(default=1)
 
 
 # This item allows us to create a unique item without adding it to a work order so
@@ -160,15 +155,24 @@ class Item(models.Model):
     item_name = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
     requires_bubble_point = models.BooleanField()
-    cleanliness_level = models.ForeignKey(CleanlinessLevel, on_delete=models.SET_NULL, null=True)
-    item_type = models.ForeignKey(ItemType, on_delete=models.SET_NULL, null=True)
-    item_material = models.ForeignKey(Material, on_delete=models.SET_NULL, null=True)
+    cleanliness_level = models.ForeignKey(CleanlinessLevel, on_delete=models.PROTECT, null=True)
+    item_type = models.ForeignKey(ItemType, on_delete=models.PROTECT, null=True)
+    item_material = models.ForeignKey(Material, on_delete=models.PROTECT, null=True)
     model_number = models.CharField(max_length=100, blank=True, null=True)
     serial_number = models.CharField(max_length=100, blank=True, null=True)
     date_added = models.DateTimeField(auto_now_add=True)
-    manufacturer = models.ForeignKey(Manufacturer, on_delete=models.SET_NULL, null=True)
+    manufacturer = models.ForeignKey(Manufacturer, on_delete=models.PROTECT, null=True)
     in_commission = models.BooleanField(default=True)
+    clean_status = models.BooleanField(default=False)
     image = models.ImageField(upload_to='item_images/', blank=True, null=True)
+
+    def clean(self):
+        if Item.objects.filter(mars_id=self.mars_id).exists():
+            raise ValidationError('An item with this MARS ID already exists.')
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Validate the model before saving
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.mars_id} - {self.item_name} - Model: {self.model_number} - Serial: {self.serial_number}"
@@ -178,9 +182,9 @@ class Item(models.Model):
 class WorkOrderItem(models.Model):
     work_order_item_id = models.AutoField(primary_key=True)
     work_order = models.ForeignKey(WorkOrder, on_delete=models.SET_NULL, null=True)
-    item = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
-    contaminant = models.ForeignKey(Contaminant, on_delete=models.SET_NULL, null=True, default=None)
-    damage = models.ForeignKey(Damage, on_delete=models.SET_NULL, null=True, default=None)
+    item = models.ForeignKey(Item, on_delete=models.PROTECT, null=True)
+    contaminant = models.ForeignKey(Contaminant, on_delete=models.PROTECT, null=True, default=None)
+    damage = models.ForeignKey(Damage, on_delete=models.PROTECT, null=True, default=None)
     added_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -208,6 +212,7 @@ class LabLog(models.Model):
     lab_log_id = models.AutoField(primary_key=True)
     cleanliness_level = models.ForeignKey(CleanlinessLevel, on_delete=models.SET_NULL, null=True)
     date_logged = models.DateTimeField(auto_now_add=True)
+    work_order = models.ForeignKey(WorkOrder, on_delete=models.PROTECT, null=True)
     range_1_count = models.IntegerField()
     range_2_count = models.IntegerField()
     range_3_count = models.IntegerField()
@@ -215,8 +220,13 @@ class LabLog(models.Model):
     range_5_count = models.IntegerField()
 
     def __str__(self):
-        return f"Lab Log for Cleanliness Level: {self.cleanliness_level}"
+        return f"{self.cleanliness_level}"
 
+class LabLogFitting(models.Model):
+    lab_log_fitting_id = models.AutoField(primary_key=True)
+    lab_log = models.ForeignKey(LabLog, on_delete=models.PROTECT, null=True)
+    lab_log_unique_fitting = models.ForeignKey(Fitting, on_delete=models.SET_NULL, null=True)
+    quantity = models.IntegerField(default=1)
 
 class LabLogItem(models.Model):
     lab_log_item_id = models.AutoField(primary_key=True)

@@ -1,5 +1,9 @@
 {% extends "admin/change_form.html" %}
+
 {% block content %}
-<a href="{% url 'inventory:download_work_order_report' object_id %}" class="button">Download Report</a>
+{% if original and original.pk %}
+    <a href="{% url 'inventory:download_work_order_report' original.pk %}" class="button">Download Work Order</a>
+    <a href="{% url 'inventory:download_transmittal' original.pk %}" class="button">Download Transmittal</a>
+{% endif %}
 {{ block.super }}
 {% endblock %}
